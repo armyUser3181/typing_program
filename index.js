@@ -40,6 +40,7 @@ const dragEventElement = args => {
                     rect.x = thisRect.x - event.clientX;
                     rect.y = thisRect.y - event.clientY;
                     for( const index of 'xy') rectOfElement[index] = rect[index];
+                    down(rect)
                     return 'next';
                 }},
                 tag: 'mousedown',
@@ -57,7 +58,8 @@ const dragEventElement = args => {
                 target: emitterOut,
             }),
             new EventActionClass({
-                callback: () => {
+                callback: ({}) => {
+                    up();
                     return 'try';
                 },
                 tag: 'mouseup',

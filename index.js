@@ -9,7 +9,7 @@ const main = args => {
 
 const init = args => {
     const nodes = createUI();
-    keyDown({element: nodes.input});
+    keyDown({element: nodes.input.getElementsByClassName('intext').item(0)});
 }
 
 const createUI = args => {
@@ -17,8 +17,13 @@ const createUI = args => {
     const monitor = createMonitor();
     const ground = createGround();
     appBInd(ground);
+    appBInd(monitor, ground);
     appBInd(input, ground);
-    dragEventElement({element: ground, move: ({pos})=>{
+    dragEventElement({element: ground.getElementsByClassName('window_bar').item(0), down: ({pos})=>{
+        const rect = ground.getBoundingClientRect();
+        for( const index of 'xy') pos[index] = rect[index];
+        
+    }, move: ({pos})=>{
         ground.style.left = pos.x + 'px';
         ground.style.top = pos.y + 'px';
         //console.log(pos)
@@ -29,13 +34,14 @@ const createUI = args => {
 const keyDown = args => {
     const { element, eventElement = new EventElement } = args || {};
     const emitter = EventEmitter.form(document);
-    if( element instanceof HTMLDivElement && eventElement instanceof EventElement ) {
+    if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
         eventElement.push(new EventActionClass({ callback: ({event})=>{ if( event instanceof KeyboardEvent ) {
             if( event.ctrlKey && event.key === 's' ) {
                 event.preventDefault();
             }
-            element.textContent += event.key;
-            
+            if( event.key.length === 1 && !event.ctrlKey && !event.altKey ) {
+                element.textContent += event.key;
+            }
         }}, tag: 'keydown', target: emitter}));
         eventElement.setup.classic;
     }
@@ -54,12 +60,14 @@ const dragEventElement = args => {
         eventElement.push(
             new EventActionClass({
                 callback: ({event})=>{ if(event instanceof MouseEvent) {
-                    const thisRect = element.getBoundingClientRect();
                     const rect = {};
-                    rect.x = thisRect.x - event.clientX;
-                    rect.y = thisRect.y - event.clientY;
+                    let pos;
+                    down && down({pos: pos = {}}) || (pos = element.getBoundingClientRect());
+
+                    rect.x = pos.x - event.clientX;
+                    rect.y = pos.y - event.clientY;
                     for( const index of 'xy') rectOfElement[index] = rect[index];
-                    down && down(rect)
+                    
                     return 'next';
                 }},
                 tag: 'mousedown',
@@ -92,18 +100,32 @@ const dragEventElement = args => {
 
 const createGround = args => {
     const ground = createDivElement();
-    ground.style.width = '400px';
-    ground.style.height = '600px';
+    ground.style.width = '860px';
+    ground.style.height = '320px';
+    const bar = createDivElement();
+    bar.classList.add('window_bar');
+    appBInd(bar, ground);
     return ground;
 }
 
 const createInput = args => {
     const input = createDivElement();
+    input.style.top = 'auto';
+    input.style.bottom = '30px';
+    input.style.width = '600px';
+    input.style.borderWidth = '1px 0px';
+    const intext = document.createElement('p');
+    intext.classList.add('intext');
+    appBInd(intext, input);
+    
     return input;
 }
 
 const createMonitor = args => {
     const monitor = createDivElement();
+    monitor.style.top = '50px';
+    monitor.style.width = '600px';
+    monitor.style.borderWidth = '1px 0px';
     return monitor;
 }
 

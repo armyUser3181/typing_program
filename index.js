@@ -7,6 +7,12 @@ const main = args => {
 
 }
 
+const tast = args => {
+    const div = createDivElement({});
+    screenMaxElementEvent({ element: div, action: ()=>{ console.log('hello world')}});
+    appBInd(div);
+}
+
 const init = args => {
     const nodes = createUI();
     keyDown({element: nodes.input.getElementsByClassName('intext').item(0)});
@@ -46,57 +52,44 @@ const keyDown = args => {
         eventElement.setup.classic;
     }
     emitter.bind
-    
+    return EventElement;
 }
 
-const dragEventElement = args => {
-    const { element, down, up, move, eventElement = new EventElement } = args || {}
-    const emitterIn = EventEmitter.form(element);
-    const emitterOut = EventEmitter.form(document);
-    const rectOfElement = {};
-    rectOfElement.x = 0;
-    rectOfElement.y = 0;
+const buttonDownEvent = args => {
+    const { element, eventElement = new EventElement, action = ()=>{} } = args || {};
+    const emitter = EventEmitter.form(element);
     if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
-        eventElement.push(
-            new EventActionClass({
-                callback: ({event})=>{ if(event instanceof MouseEvent) {
-                    const rect = {};
-                    let pos;
-                    down && down({pos: pos = {}}) || (pos = element.getBoundingClientRect());
+        eventElement.push( new EventActionClass({ callback: ({event})=>{ if(event instanceof MouseEvent) {
+            action()
+        }}, tag: 'click', target: emitter }))
+        eventElement.setup.classic
+        emitter.bind
+    }
+    return eventElement;
+}
 
-                    rect.x = pos.x - event.clientX;
-                    rect.y = pos.y - event.clientY;
-                    for( const index of 'xy') rectOfElement[index] = rect[index];
-                    
-                    return 'next';
-                }},
-                tag: 'mousedown',
-                target: emitterIn,
-            }),
-            new EventActionClass({
-                callback: ({event})=>{ if(event instanceof MouseEvent) {
-                    const rect = {};
-                    rect.x = event.clientX + rectOfElement.x;
-                    rect.y = event.clientY + rectOfElement.y;
-                    const rt = move && move({pos: rect});
-                    return 'loop';
-                }},
-                tag: 'mousemove',
-                target: emitterOut,
-            }),
-            new EventActionClass({
-                callback: ({}) => {
-                    up && up();
-                    return 'try';
-                },
-                tag: 'mouseup',
-                target: emitterOut,
+const screenMaxElementEvent = args => {
+    const { element, eventElement = new EventElement, target = element } = args || {};
+    //const emitter = EventEmitter.form(element);
+    if( element instanceof HTMLElement && eventElement instanceof EventElement && target instanceof HTMLElement ) {
+        const setMap = new Map;
+        setMap.set('width', '100%')
+        setMap.set('height', '100%')
+        setMap.set('left', '0%')
+        setMap.set('top', '0%')
+        const action = args => {
+            setMap.forEach((val, key, map)=>{
+                const pv = target.style[key];
+                target.style[key] = val;
+                map.set(key, pv);
             })
-        )
-        eventElement.setup.call
-        emitterIn.bind
+        }
+        buttonDownEvent({ element, eventElement, action })
+
     }
 }
+
+
 
 const createGround = args => {
     const ground = createDivElement();
@@ -152,4 +145,54 @@ const appBInd = (element, parent = document.body) => {
     return element;
 }
 
-init();
+const dragEventElement = args => {
+    const { element, down, up, move, eventElement = new EventElement } = args || {}
+    const emitterIn = EventEmitter.form(element);
+    const emitterOut = EventEmitter.form(document);
+    const rectOfElement = {};
+    rectOfElement.x = 0;
+    rectOfElement.y = 0;
+    if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
+        eventElement.push(
+            new EventActionClass({
+                callback: ({event})=>{ if(event instanceof MouseEvent) {
+                    const rect = {};
+                    let pos;
+                    down && down({pos: pos = {}}) || (pos = element.getBoundingClientRect());
+
+                    rect.x = pos.x - event.clientX;
+                    rect.y = pos.y - event.clientY;
+                    for( const index of 'xy') rectOfElement[index] = rect[index];
+                    
+                    return 'next';
+                }},
+                tag: 'mousedown',
+                target: emitterIn,
+            }),
+            new EventActionClass({
+                callback: ({event})=>{ if(event instanceof MouseEvent) {
+                    const rect = {};
+                    rect.x = event.clientX + rectOfElement.x;
+                    rect.y = event.clientY + rectOfElement.y;
+                    const rt = move && move({pos: rect});
+                    return 'loop';
+                }},
+                tag: 'mousemove',
+                target: emitterOut,
+            }),
+            new EventActionClass({
+                callback: ({}) => {
+                    up && up();
+                    return 'try';
+                },
+                tag: 'mouseup',
+                target: emitterOut,
+            })
+        )
+        eventElement.setup.call
+        emitterIn.bind
+    }
+}
+
+//init();
+tast()

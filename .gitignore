@@ -1,0 +1,4 @@
+init_for_typing_program
+*.log
+node_modules/
+.DS_Store

@@ -11,6 +11,8 @@
 import EventEmitter from './sequent/EventEmitter.js'
 import EventElement from './sequent/EventElementClass.js'
 import EventActionClass from './sequent/EventActionClass.js'
+import HangulClass from './hangulClass.js'
+import KeyboardClass from './keyboardClass.js'
 
 const main = args => {
 
@@ -25,8 +27,10 @@ const tast = args => {
 
 const init = args => {
     const nodes = createUI();
-    keyDown({element: nodes.input.getElementsByClassName('intext').item(0)});
+    const keyboard = new KeyboardClass();
+    keyDown({element: nodes.input.getElementsByClassName('intext').item(0), keyboard});
 }
+
 
 const createUI = args => {
     const input = createInput();
@@ -64,22 +68,70 @@ const createUI = args => {
  * listens for keydown events through a shared EventEmitter.
  */
 const keyDown = args => {
-    const { element, eventElement = new EventElement } = args || {};
+    const { element, eventElement = new EventElement, keyboard } = args || {};
     const emitter = EventEmitter.form(document);
+    const hangul = new HangulClass();
+    let lang = 'ko';
+    
     if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
         eventElement.push(new EventActionClass({ callback: ({event})=>{ if( event instanceof KeyboardEvent ) {
             if( event.ctrlKey && event.key === 's' ) {
                 event.preventDefault();
             }
-            if( event.key.length === 1 && !event.ctrlKey && !event.altKey ) {
-                element.textContent += event.key;
+
+            if( event.altKey && event.key === 'n') {
+                const kepLang = keyboard.lang;
+                keyboard.lang = lang;
+                lang = kepLang;
+            }
+            
+            if( event.key === 'Backspace' ) {
+
+            } else if( event.key.length === 1 && !event.ctrlKey && !event.altKey ) {
+                keyboard.processKey(event.key);
+                element.textContent = keyboard.getOutput();
             }
         }}, tag: 'keydown', target: emitter}));
+        
         eventElement.setup.classic;
     }
     emitter.bind
     return EventElement;
 }
+/* const keyDown = args => {
+    const { element, eventElement = new EventElement } = args || {};
+    const emitter = EventEmitter.form(document);
+    const hangul = new HangulClass();
+    
+    if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
+        eventElement.push(new EventActionClass({ callback: ({event})=>{ if( event instanceof KeyboardEvent ) {
+            if( event.ctrlKey && event.key === 's' ) {
+                event.preventDefault();
+            }
+            
+            if( event.key === 'Backspace' ) {
+                const result = hangul.backspace();
+                if( result ) {
+                    element.textContent = element.textContent.slice(0, -1) + result;
+                } else {
+                    element.textContent = element.textContent.slice(0, -1);
+                }
+            } else if( event.key.length === 1 && !event.ctrlKey && !event.altKey ) {
+                const result = hangul.processKey(event.key);
+                if( result !== null ) {
+                    // 완성된 글자가 있으면 마지막 글자 교체
+                    if( result ) {
+                        element.textContent = element.textContent.slice(0, -1) + result;
+                    }
+                }
+            }
+        }}, tag: 'keydown', target: emitter}));
+        
+        eventElement.setup.classic;
+    }
+    emitter.bind
+    return EventElement;
+} */
 
 
 
@@ -212,20 +264,31 @@ const createDivElement = args => {
     return div;
 }
 
-const settingDivElement = args => {
-    const { div } = args;
-    if( div instanceof HTMLDivElement ) {
-        div.style.left;
-        const pr = div.parentElement.getBoundingClientRect();
-        const dr = div.getBoundingClientRect();
-        div.style.left = `${(pr.width - dr.width)/ 2}px`;
+const settingElement = args => {
+    const { element } = args;
+    if( element instanceof HTMLElement ) {
+        const pr = element.parentElement.getBoundingClientRect();
+        const dr = element.getBoundingClientRect();
+        element.style.left = `${(pr.width - dr.width)/ 2}px`;
     }
-    return div;
+    return element;
+}
+
+const settingButtonElement = args => {
+    const { button } = args;
+    if( button instanceof HTMLButtonElement ) {
+        // 버튼 특화 설정이 필요하다면 여기에 추가
+    }
+    return button;
 }
 
 const appBInd = (element, parent = document.body) => {
     parent.appendChild(element);
-    settingDivElement({div: element});
+    if( element instanceof HTMLDivElement ) {
+        settingElement({element});
+    } else if( element instanceof HTMLButtonElement ) {
+        settingButtonElement({button: element});
+    }
     return element;
 }
 

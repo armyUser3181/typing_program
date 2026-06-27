@@ -30,8 +30,8 @@
 - `EventHandler.js` - 이벤트 요소 그룹 관리를 위한 도우미
 - `EventFlowClass.js`, `EventFlowEnum.js` - 이벤트 플로우 상태 관리
 
-## 다음 보완할 항목
+## 완료된 보완 항목
 
-- `index.js`와 `sequent/` 간 역할 분리
-- `README.md`의 사용 예시 확대
-- `sequent/README.md`와 함께 프로젝트 문서화 강화
+- ~~`index.js`와 `sequent/` 간 역할 분리~~ - 현재 sequent 모듈을 submodule로 분리 완료
+- ~~`README.md`의 사용 예시 확대~~ - 기본 구조 및 실행 방법 문서화 완료
+- ~~`sequent/README.md`와 함께 프로젝트 문서화 강화~~ - sequent 모듈은 별도 저장소로 관리

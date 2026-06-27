@@ -17,6 +17,7 @@ const main = args => {
 }
 
 const tast = args => {
+
     const div = createDivElement({});
     screenMaxElementEvent({ element: div, action: ()=>{ console.log('hello world')}});
     appBInd(div);
@@ -31,18 +32,29 @@ const createUI = args => {
     const input = createInput();
     const monitor = createMonitor();
     const ground = createGround();
-    appBInd(ground);
-    appBInd(monitor, ground);
-    appBInd(input, ground);
-    dragEventElement({element: ground.getElementsByClassName('window_bar').item(0), down: ({pos})=>{
-        const rect = ground.getBoundingClientRect();
+    appBInd(ground.node);
+    appBInd(monitor, ground.node);
+    appBInd(input, ground.node);
+    const dragEvent = dragEventElement({element: ground.node.getElementsByClassName('window_bar').item(0), down: ({pos})=>{
+        const rect = ground.node.getBoundingClientRect();
         for( const index of 'xy') pos[index] = rect[index];
         
     }, move: ({pos})=>{
-        ground.style.left = pos.x + 'px';
-        ground.style.top = pos.y + 'px';
+        ground.node.style.left = pos.x + 'px';
+        ground.node.style.top = pos.y + 'px';
         //console.log(pos)
     }});
+    ground.appends.appendAction = ({status})=>{
+        switch(status) {
+            case 'max':
+                dragEvent && dragEvent.unbind;
+                dragEvent && dragEvent.actions[0].bind;
+                break;
+            case 'min':
+                dragEvent && dragEvent.unbind;
+                break;
+        }
+    }
     return { input, monitor, ground };
 }
 
@@ -69,6 +81,8 @@ const keyDown = args => {
     return EventElement;
 }
 
+
+
 /**
  * Create a click-like button event action for a target element.
  * This helper wraps EventActionClass so callers can provide a simple
@@ -83,8 +97,9 @@ const buttonDownEvent = args => {
         }}, tag: 'click', target: emitter }))
         eventElement.setup.classic
         emitter.bind
+        return eventElement;
     }
-    return eventElement;
+    
 }
 
 /**
@@ -93,7 +108,7 @@ const buttonDownEvent = args => {
  * with a generated action that updates the target element styles.
  */
 const screenMaxElementEvent = args => {
-    const { element, eventElement = new EventElement, target = element } = args || {};
+    const { element, eventElement = new EventElement, target = element, action: func } = args || {};
     //const emitter = EventEmitter.form(element);
     if( element instanceof HTMLElement && eventElement instanceof EventElement && target instanceof HTMLElement ) {
         const setMap = new Map;
@@ -102,6 +117,7 @@ const screenMaxElementEvent = args => {
         setMap.set('left', '0%')
         setMap.set('top', '0%')
         const action = args => {
+            func && func();
             setMap.forEach((val, key, map)=>{
                 const pv = target.style[key];
                 target.style[key] = val;
@@ -109,8 +125,53 @@ const screenMaxElementEvent = args => {
             })
         }
         buttonDownEvent({ element, eventElement, action })
-
+        return eventElement;
     }
+    
+}
+
+const windowBarMaxMinElement = args => {
+    const {element = createDivElement(), target : element_target, appends} = args || {};
+    if( element instanceof HTMLElement ) {
+        element.classList.add('window_bar_maxmin');
+        const max = document.createElement('div');
+        max.classList.add('window_bar_maxmin_max');
+        const min = document.createElement('div');
+        min.classList.add('window_bar_maxmin_min');
+        appBInd(max, element);
+        appBInd(min, element);
+        //element.removeChild(max);
+        element.removeChild(min);
+        let stus = 'max';
+        screenMaxElementEvent({ element: element, target: element_target, action: ()=>{
+            switch(stus) {
+                case 'min':
+                    stus = 'max';
+                    element.removeChild(min);
+                    element.appendChild(max);
+                    break;
+                case 'max':
+                    stus = 'min';
+                    element.removeChild(max);
+                    element.appendChild(min);
+                    break;
+            }
+            appends.appendAction && appends.appendAction({status: stus});
+        }, });
+        return element;
+    }
+}
+
+const windowElement = args => {
+    const { element = createDivElement(), appends } = args || {};
+    element.style.width = '600px';
+    element.style.height = '400px';
+    const bar = createDivElement();
+    bar.classList.add('window_bar');
+    const maxmin = windowBarMaxMinElement({target: element, appends});
+    appBInd(maxmin, bar);
+    appBInd(bar, element);
+    return element;
 }
 
 
@@ -119,10 +180,9 @@ const createGround = args => {
     const ground = createDivElement();
     ground.style.width = '860px';
     ground.style.height = '320px';
-    const bar = createDivElement();
-    bar.classList.add('window_bar');
-    appBInd(bar, ground);
-    return ground;
+    const returns = { node: ground, appends: {} };
+    windowElement({element: ground, appends: returns.appends});
+    return returns;
 }
 
 const createInput = args => {
@@ -215,8 +275,9 @@ const dragEventElement = args => {
         )
         eventElement.setup.call
         emitterIn.bind
+        return eventElement;
     }
 }
 
-//init();
-tast()
+init();
+///tast()

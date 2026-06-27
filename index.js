@@ -1,4 +1,13 @@
 
+/**
+ * index.js
+ *
+ * Demo application entrypoint for the sequent event system.
+ * This file builds a small UI surface, attaches event handlers,
+ * and illustrates how EventEmitter, EventElement, and EventActionClass
+ * can be combined for custom DOM event flow management.
+ */
+
 import EventEmitter from './sequent/EventEmitter.js'
 import EventElement from './sequent/EventElementClass.js'
 import EventActionClass from './sequent/EventActionClass.js'
@@ -37,6 +46,11 @@ const createUI = args => {
     return { input, monitor, ground };
 }
 
+/**
+ * Bind a simple keyboard event sequence to the given element.
+ * The event element manages an EventActionClass instance that
+ * listens for keydown events through a shared EventEmitter.
+ */
 const keyDown = args => {
     const { element, eventElement = new EventElement } = args || {};
     const emitter = EventEmitter.form(document);
@@ -55,6 +69,11 @@ const keyDown = args => {
     return EventElement;
 }
 
+/**
+ * Create a click-like button event action for a target element.
+ * This helper wraps EventActionClass so callers can provide a simple
+ * action callback for mouse down behavior.
+ */
 const buttonDownEvent = args => {
     const { element, eventElement = new EventElement, action = ()=>{} } = args || {};
     const emitter = EventEmitter.form(element);
@@ -68,6 +87,11 @@ const buttonDownEvent = args => {
     return eventElement;
 }
 
+/**
+ * Attach a full-screen maximize behavior to the provided element.
+ * This demonstrates custom event composition by reusing buttonDownEvent
+ * with a generated action that updates the target element styles.
+ */
 const screenMaxElementEvent = args => {
     const { element, eventElement = new EventElement, target = element } = args || {};
     //const emitter = EventEmitter.form(element);

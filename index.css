@@ -21,11 +21,10 @@
     padding: 0px;
     display: flex;
     flex-direction: row-reverse;
-/*     flex-wrap: nowrap;
+    /* flex-wrap: nowrap;
     flex-shrink: 0;
     flex-grow: 0;
     flex-basis: auto; */
-
 }
 
 .window_bar .window_bar_maxmin {
@@ -38,6 +37,7 @@
     margin: 2px;
     border: 1px solid;
     padding: 2px;
+    background-color: #33FFFFCC;
     
     /* border-left: 1px solid; */
     box-sizing: border-box;
@@ -74,3 +74,16 @@
     position: relative;
 
 }
+
+.ground {
+    position: absolute;
+}
+
+.monitor {
+    position: absolute;
+}
+
+.input {
+    position: absolute;
+}
+

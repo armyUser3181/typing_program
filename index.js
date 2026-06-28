@@ -98,40 +98,6 @@ const keyDown = args => {
     emitter.bind
     return EventElement;
 }
-/* const keyDown = args => {
-    const { element, eventElement = new EventElement } = args || {};
-    const emitter = EventEmitter.form(document);
-    const hangul = new HangulClass();
-    
-    if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
-        eventElement.push(new EventActionClass({ callback: ({event})=>{ if( event instanceof KeyboardEvent ) {
-            if( event.ctrlKey && event.key === 's' ) {
-                event.preventDefault();
-            }
-            
-            if( event.key === 'Backspace' ) {
-                const result = hangul.backspace();
-                if( result ) {
-                    element.textContent = element.textContent.slice(0, -1) + result;
-                } else {
-                    element.textContent = element.textContent.slice(0, -1);
-                }
-            } else if( event.key.length === 1 && !event.ctrlKey && !event.altKey ) {
-                const result = hangul.processKey(event.key);
-                if( result !== null ) {
-                    // 완성된 글자가 있으면 마지막 글자 교체
-                    if( result ) {
-                        element.textContent = element.textContent.slice(0, -1) + result;
-                    }
-                }
-            }
-        }}, tag: 'keydown', target: emitter}));
-        
-        eventElement.setup.classic;
-    }
-    emitter.bind
-    return EventElement;
-} */
 
 
 
@@ -255,12 +221,18 @@ const createMonitor = args => {
     monitor.style.top = '50px';
     monitor.style.width = '600px';
     monitor.style.borderWidth = '1px 0px';
+    monitor.classList.add('monitor')
     return monitor;
 }
 
 const createDivElement = args => {
     const div = document.createElement('div');
     div.classList.add('CenterElementClass');
+    // metadata container for appended children/actions
+    div.appends = {};
+    // default appendAction stub — can be overridden by callers
+    div.appends.appendAction = ({ status } = {}) => {};
+
     return div;
 }
 

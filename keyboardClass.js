@@ -12,24 +12,41 @@ class Feld {
 
     get #getSeek() {
         const index = this.#buffer.length-1;
-        this.#seek = this.#buffer[index];
+        return this.#seek = this.#buffer[index];
     }
 
     get seek() {
-
+        return this.#seek || ( this.#seek = this.#getSeek );
     }
 
     #bufferPush(value = '') {
         this.#buffer = this.#buffer + value;
-        
     }
 
     get buffer() {
-        return { ...this.#buffer, push: this.#bufferPush  }
+        return this.#buffer;
+        //return { ...this.#buffer, push: this.#bufferPush  }
     }
 
     set buffer(val) {
-        this.#bufferPush(val);
+        this.#buffer = val;
+        //this.#bufferPush(val);
+    }
+
+    #order = 0;
+
+    get order() {
+        return this.#order;
+    }
+
+    set order(val) {
+        this.#order = val;
+    }
+    
+    static same(a, b) {
+        if(a instanceof Feld && b instanceof Feld) {
+            return a.buffer[a.order] === b.buffer[b.order];
+        }
     }
 
 }
@@ -41,6 +58,7 @@ export default class KeyboardClass {
         this.input = new Feld();
         this.output = new Feld();
         this.target = new Feld();
+        this.target.buffer = 'hello world';
     }
 
 
@@ -58,7 +76,7 @@ export default class KeyboardClass {
 
             if(key === this.target.buffer[this.order]) {
                 this.hangulClass.reset();
-                this.output.buffer += key;
+                //this.output.buffer += key;
                 //this.order++;
                 
                 return key;
@@ -67,10 +85,16 @@ export default class KeyboardClass {
             this.output.buffer += key;
         }
         if( this.lang === 'en' ) {
-            
-            this.output.buffer += key;
+
+            if( this.target.buffer[this.target.order] === key ) {
+                this.output.buffer += key;
+                this.output.order++;
+                this.target.order++;
+            }
             return key;
         }
+
+        
     }
 
     processEnd() {

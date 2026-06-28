@@ -36,16 +36,16 @@ const createUI = args => {
     const input = createInput();
     const monitor = createMonitor();
     const ground = createGround();
-    appBInd(ground.node);
-    appBInd(monitor, ground.node);
-    appBInd(input, ground.node);
-    const dragEvent = dragEventElement({element: ground.node.getElementsByClassName('window_bar').item(0), down: ({pos})=>{
-        const rect = ground.node.getBoundingClientRect();
+    appBInd(ground);
+    appBInd(monitor, ground);
+    appBInd(input, ground);
+    const dragEvent = dragEventElement({element: ground.getElementsByClassName('window_bar').item(0), down: ({pos})=>{
+        const rect = ground.getBoundingClientRect();
         for( const index of 'xy') pos[index] = rect[index];
         
     }, move: ({pos})=>{
-        ground.node.style.left = pos.x + 'px';
-        ground.node.style.top = pos.y + 'px';
+        ground.style.left = pos.x + 'px';
+        ground.style.top = pos.y + 'px';
         //console.log(pos)
     }});
     ground.appends.appendAction = ({status})=>{
@@ -149,7 +149,7 @@ const screenMaxElementEvent = args => {
 }
 
 const windowBarMaxMinElement = args => {
-    const {element = createDivElement(), target : element_target, appends} = args || {};
+    const {element = createDivElement(), target : element_target} = args || {};
     if( element instanceof HTMLElement ) {
         element.classList.add('window_bar_maxmin');
         const max = document.createElement('div');
@@ -174,19 +174,19 @@ const windowBarMaxMinElement = args => {
                     element.appendChild(min);
                     break;
             }
-            appends.appendAction && appends.appendAction({status: stus});
+            element.appends && element.appends.appendAction && element.appends.appendAction({status: stus});
         }, });
         return element;
     }
 }
 
 const windowElement = args => {
-    const { element = createDivElement(), appends } = args || {};
-    element.style.width = '600px';
-    element.style.height = '400px';
+    const { element = createDivElement() } = args || {};
+    element.style.width || (element.style.width = '600px');
+    element.style.height || (element.style.height = '400px');
     const bar = createDivElement();
     bar.classList.add('window_bar');
-    const maxmin = windowBarMaxMinElement({target: element, appends});
+    const maxmin = windowBarMaxMinElement({target: element});
     appBInd(maxmin, bar);
     appBInd(bar, element);
     return element;
@@ -198,9 +198,10 @@ const createGround = args => {
     const ground = createDivElement();
     ground.style.width = '860px';
     ground.style.height = '320px';
-    const returns = { node: ground, appends: {} };
-    windowElement({element: ground, appends: returns.appends});
-    return returns;
+    ground.appends = {};
+    windowElement({element: ground});
+    ground.classList.add('ground');
+    return ground;
 }
 
 const createInput = args => {
@@ -209,6 +210,7 @@ const createInput = args => {
     input.style.bottom = '30px';
     input.style.width = '600px';
     input.style.borderWidth = '1px 0px';
+    input.classList.add('input')
     const intext = document.createElement('p');
     intext.classList.add('intext');
     appBInd(intext, input);
@@ -236,7 +238,7 @@ const createDivElement = args => {
     return div;
 }
 
-const settingElement = args => {
+const settingDivElement = args => {
     const { element } = args;
     if( element instanceof HTMLElement ) {
         const pr = element.parentElement.getBoundingClientRect();
@@ -257,7 +259,7 @@ const settingButtonElement = args => {
 const appBInd = (element, parent = document.body) => {
     parent.appendChild(element);
     if( element instanceof HTMLDivElement ) {
-        settingElement({element});
+        settingDivElement({element});
     } else if( element instanceof HTMLButtonElement ) {
         settingButtonElement({button: element});
     }

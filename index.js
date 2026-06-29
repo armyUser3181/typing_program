@@ -39,27 +39,21 @@ const createUI = args => {
     appBInd(ground);
     appBInd(monitor, ground);
     appBInd(input, ground);
-    const dragEvent = dragEventElement({element: ground.getElementsByClassName('window_bar').item(0), down: ({pos})=>{
-        const rect = ground.getBoundingClientRect();
-        for( const index of 'xy') pos[index] = rect[index];
-        
-    }, move: ({pos})=>{
-        ground.style.left = pos.x + 'px';
-        ground.style.top = pos.y + 'px';
-        //console.log(pos)
-    }});
-    ground.appends.appendAction = ({status})=>{
-        switch(status) {
-            case 'max':
-                dragEvent && dragEvent.unbind;
-                dragEvent && dragEvent.actions[0].bind;
-                break;
-            case 'min':
-                dragEvent && dragEvent.unbind;
-                break;
-        }
-    }
+    reclosed({element: ground});
     return { input, monitor, ground };
+}
+
+const reclosed = args => {
+    const { element, eventElement = new EventElement } = args || {};
+    const emitter = EventEmitter.form(document);
+    if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
+        eventElement.push( new EventActionClass({ callback: ({event})=>{
+            if(event instanceof MouseEvent) {
+                event.target === document.getRootNode().childNodes.item(1) && element.classList.remove('element_close');
+            }
+        }, tag: 'click', target: emitter}))
+        eventElement.setup.classic;
+    }
 }
 
 /**
@@ -149,9 +143,9 @@ const screenMaxElementEvent = args => {
 }
 
 const windowBarMaxMinElement = args => {
-    const {element = createDivElement(), target : element_target} = args || {};
+    const {element = createDivElement(), target : element_target, action : append_action } = args || {};
     if( element instanceof HTMLElement ) {
-        element.classList.add('window_bar_maxmin');
+        element.classList.add('window_bar_maxmin', 'window_bar_button');
         const max = document.createElement('div');
         max.classList.add('window_bar_maxmin_max');
         const min = document.createElement('div');
@@ -159,8 +153,8 @@ const windowBarMaxMinElement = args => {
         appBInd(max, element);
         appBInd(min, element);
         //element.removeChild(max);
-        element.removeChild(min);
-        let stus = 'max';
+        element.removeChild(max);
+        let stus = 'min';
         screenMaxElementEvent({ element: element, target: element_target, action: ()=>{
             switch(stus) {
                 case 'min':
@@ -174,8 +168,19 @@ const windowBarMaxMinElement = args => {
                     element.appendChild(min);
                     break;
             }
-            element.appends && element.appends.appendAction && element.appends.appendAction({status: stus});
+            append_action && append_action(stus);
         }, });
+        return element;
+    }
+}
+
+const windowCloseElement = args => {
+    const {element = createDivElement(), target : element_target} = args || {};
+    if( element instanceof HTMLElement && element_target instanceof HTMLElement ) {
+        element.classList.add('window_bar_button', 'window_bar_close');
+        buttonDownEvent({element, action: ()=>{
+            element_target.classList.add('element_close');
+        }});
         return element;
     }
 }
@@ -186,9 +191,32 @@ const windowElement = args => {
     element.style.height || (element.style.height = '400px');
     const bar = createDivElement();
     bar.classList.add('window_bar');
-    const maxmin = windowBarMaxMinElement({target: element});
-    appBInd(maxmin, bar);
+
+    const dragEvent = dragEventElement({element: bar, down: ({pos})=>{
+        const rect = element.getBoundingClientRect();
+        for( const index of 'xy') pos[index] = rect[index];
+    }, move: ({pos})=>{
+        element.style.left = pos.x + 'px';
+        element.style.top = pos.y + 'px';
+    }});
+
+    const closed = windowCloseElement({target: element});
+
+    const maxmined = windowBarMaxMinElement({target: element, action: (stus)=>{
+        if(stus === 'max') {
+            dragEvent.unbind;
+        } else if(stus === 'min') {
+            dragEvent.actions[0].bind;
+        }
+        console.log('ell')
+    }});
+    
+    appBInd(closed, bar);
+    appBInd(maxmined, bar);
     appBInd(bar, element);
+
+    
+
     return element;
 }
 
@@ -198,9 +226,8 @@ const createGround = args => {
     const ground = createDivElement();
     ground.style.width = '860px';
     ground.style.height = '320px';
-    ground.appends = {};
-    windowElement({element: ground});
     ground.classList.add('ground');
+    windowElement({element: ground})
     return ground;
 }
 
@@ -233,7 +260,7 @@ const createDivElement = args => {
     // metadata container for appended children/actions
     div.appends = {};
     // default appendAction stub — can be overridden by callers
-    div.appends.appendAction = ({ status } = {}) => {};
+    div.appends.appendAction_maxmin = ({ status } = {}) => {};
 
     return div;
 }

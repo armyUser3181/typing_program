@@ -13,6 +13,13 @@ import EventElement from './sequent/EventElementClass.js'
 import EventActionClass from './sequent/EventActionClass.js'
 import HangulClass from './hangulClass.js'
 import KeyboardClass from './keyboardClass.js'
+import FileInput from './FileInput.js'
+import FrameEmitter from './frameEmitter.js'
+
+const mainStart = args => {
+    init();
+    //tast();
+}
 
 const main = args => {
 
@@ -20,15 +27,58 @@ const main = args => {
 
 const tast = args => {
 
-    const div = createDivElement({});
-    screenMaxElementEvent({ element: div, action: ()=>{ console.log('hello world')}});
-    appBInd(div);
+    const h = new HangulClass();
+    console.log(h.processKey('s'), h.cho, h.jung, h.jong);
+    console.log(h.processKey('h'), h.cho, h.jung, h.jong);
+    console.log(h.processKey('k'), h.cho, h.jung, h.jong);
+
 }
 
 const init = args => {
     const nodes = createUI();
     const keyboard = new KeyboardClass();
     keyDown({element: nodes.input.getElementsByClassName('intext').item(0), keyboard});
+    nodes.monitor.children[0].textContent = keyboard.target.buffer;
+    let firstClick = true;
+    const fileInput = new FileInput(nodes.monitor, (text) => {
+        text = text.replace(/[\r\n]/g, '');
+        keyboard.output.order = 0;
+        keyboard.output.buffer = '';
+        keyboard.target.order = 0;
+        keyboard.target.buffer = text;
+        firstClick = true
+        nodes.monitor.children[0].textContent = text;
+    });
+    const frameEmitter = new FrameEmitter();
+    let frameCount = 0;
+    let typingCount = 0;
+    let tigCount = 0;
+    
+    frameEmitter.push('speed', () => {
+        frameCount++;
+        if (frameCount >= 10) {
+            frameCount = 0;
+            tigCount++;
+            nodes.status.children[0].textContent = 'typing speed: ' + (typingCount / tigCount * 60 * 6).toFixed(2) + ' wpm';
+            //console.log('typing speed:', typingCount / tigCount * 60);
+        }
+    });
+    keyboard.processAppendEvent = () => {
+        if (firstClick) {
+            firstClick = false;
+            tigCount = 0;
+            return;
+        }
+        console.log('processAppendEvent');
+        typingCount++;
+        if(keyboard.target.buffer.length === keyboard.output.buffer.length) {
+            firstClick = true;
+            typingCount = 0;
+            tigCount = 0;
+            frameEmitter.unbind('speed');
+        }
+    };
+    frameEmitter.bind();
 }
 
 
@@ -36,11 +86,13 @@ const createUI = args => {
     const input = createInput();
     const monitor = createMonitor();
     const ground = createGround();
+    const status = createStatus();
     appBInd(ground);
     appBInd(monitor, ground);
     appBInd(input, ground);
+    appBInd(status, ground);
     reclosed({element: ground});
-    return { input, monitor, ground };
+    return { input, monitor, ground, status };
 }
 
 const reclosed = args => {
@@ -64,7 +116,6 @@ const reclosed = args => {
 const keyDown = args => {
     const { element, eventElement = new EventElement, keyboard } = args || {};
     const emitter = EventEmitter.form(document);
-    const hangul = new HangulClass();
     let lang = 'ko';
     
     if( element instanceof HTMLElement && eventElement instanceof EventElement ) {
@@ -73,14 +124,14 @@ const keyDown = args => {
                 event.preventDefault();
             }
 
-            if( event.altKey && event.key === 'n') {
+            if( event.key === 'HangulMode') {
                 const kepLang = keyboard.lang;
                 keyboard.lang = lang;
                 lang = kepLang;
             }
             
             if( event.key === 'Backspace' ) {
-
+                keyboard.Backspace();
             } else if( event.key.length === 1 && !event.ctrlKey && !event.altKey ) {
                 keyboard.processKey(event.key);
                 element.textContent = keyboard.getOutput();
@@ -251,7 +302,24 @@ const createMonitor = args => {
     monitor.style.width = '600px';
     monitor.style.borderWidth = '1px 0px';
     monitor.classList.add('monitor')
+    const intext = document.createElement('p');
+    intext.classList.add('intext');
+    appBInd(intext, monitor);
     return monitor;
+}
+
+const createStatus = args => {
+    const status = createDivElement();
+    status.style.top = '5px';
+    status.style.width = '600px';
+    status.style.height = '30px';
+    //status.style.borderWidth = '1px 0px';
+    status.style.border = '0px solid black';
+    status.classList.add('status')
+    const intext = document.createElement('p');
+    intext.classList.add('intext');
+    appBInd(intext, status);
+    return status;
 }
 
 const createDivElement = args => {
@@ -343,5 +411,5 @@ const dragEventElement = args => {
     }
 }
 
-init();
+mainStart();
 ///tast()

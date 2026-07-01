@@ -31,16 +31,17 @@ export class HangulClass {
         this.keyMap.set('z', 'ㅋ');
         this.keyMap.set('x', 'ㅌ');
         this.keyMap.set('v', 'ㅍ');
+        this.keyMap.set('g', 'ㅎ');
 
         // 두벌식 모음 매핑
         this.keyMap.set('k', 'ㅏ');
         this.keyMap.set('o', 'ㅐ');
-        this.keyMap.set('i', 'ㅔ');
+        this.keyMap.set('i', 'ㅑ');
         this.keyMap.set('O', 'ㅒ');
-        this.keyMap.set('j', 'ㅗ');
-        this.keyMap.set('p', 'ㅗ');
-        this.keyMap.set('u', 'ㅜ');
-        this.keyMap.set('P', 'ㅜ');
+        this.keyMap.set('j', 'ㅓ');
+        this.keyMap.set('p', 'ㅔ');
+        this.keyMap.set('u', 'ㅕ');
+        this.keyMap.set('P', 'ㅖ');
         this.keyMap.set('h', 'ㅗ');
         this.keyMap.set('y', 'ㅛ');
         this.keyMap.set('n', 'ㅜ');
@@ -159,10 +160,11 @@ export class HangulClass {
      */
     processKey(key) {
         const jamo = this.keyToJamo(key);
-        if (!jamo) return null;
+        //if (!jamo) return null;
 
-        if (!HangulClass.keyMap.has(jamo)) {
-            return jamo;
+        if (!HangulClass.keyMap.has(key)) {
+            this.reset();
+            return key;
         }
 
         // 초성
@@ -177,10 +179,28 @@ export class HangulClass {
             return this.assemble();
         }
 
+        // 복합 모음 조합 (종성보다 먼저 체크)
+        if (this.cho && this.jung && !this.jong && HangulClass.jungMap.has(jamo)) {
+            const combined = this.combineJung(this.jung, jamo);
+            if (combined) {
+                this.jung = combined;
+                return this.assemble();
+            }
+        }
+
         // 종성
         if (this.cho && this.jung && !this.jong && HangulClass.jongMap.has(jamo)) {
             this.jong = jamo;
             return this.assemble();
+        }
+
+        // 복합 종성 조합
+        if (this.cho && this.jung && this.jong && HangulClass.jongMap.has(jamo)) {
+            const combined = this.combineJong(this.jong, jamo);
+            if (combined) {
+                this.jong = combined;
+                return this.assemble();
+            }
         }
 
         // 새 글자 시작
@@ -191,6 +211,39 @@ export class HangulClass {
             return result;
         }
 
+        return null;
+    }
+
+    /**
+     * 복합 모음 조합
+     */
+    combineJung(base, add) {
+        const combinations = {
+            'ㅗ': { 'ㅏ': 'ㅘ', 'ㅐ': 'ㅙ', 'ㅣ': 'ㅚ' },
+            'ㅜ': { 'ㅓ': 'ㅝ', 'ㅔ': 'ㅞ', 'ㅣ': 'ㅟ' },
+            'ㅡ': { 'ㅣ': 'ㅢ' }
+        };
+        
+        if (combinations[base] && combinations[base][add]) {
+            return combinations[base][add];
+        }
+        return null;
+    }
+
+    /**
+     * 복합 종성 조합
+     */
+    combineJong(base, add) {
+        const combinations = {
+            'ㄱ': { 'ㅅ': 'ㄳ' },
+            'ㄴ': { 'ㅈ': 'ㄵ', 'ㅎ': 'ㄶ' },
+            'ㄹ': { 'ㄱ': 'ㄺ', 'ㅁ': 'ㄻ', 'ㅂ': 'ㄼ', 'ㅅ': 'ㄽ', 'ㅌ': 'ㄾ', 'ㅍ': 'ㄿ', 'ㅎ': 'ㅀ' },
+            'ㅂ': { 'ㅅ': 'ㅄ' }
+        };
+        
+        if (combinations[base] && combinations[base][add]) {
+            return combinations[base][add];
+        }
         return null;
     }
 
@@ -208,9 +261,32 @@ export class HangulClass {
      */
     backspace() {
         if (this.jong) {
-            this.jong = '';
+            // 복합 종성 분해
+            const jongCombinations = {
+                'ㄳ': 'ㄱ', 'ㄵ': 'ㄴ', 'ㄶ': 'ㄴ',
+                'ㄺ': 'ㄹ', 'ㄻ': 'ㄹ', 'ㄼ': 'ㄹ',
+                'ㄽ': 'ㄹ', 'ㄾ': 'ㄹ', 'ㄿ': 'ㄹ',
+                'ㅀ': 'ㄹ', 'ㅄ': 'ㅂ'
+            };
+            
+            if (jongCombinations[this.jong]) {
+                this.jong = jongCombinations[this.jong];
+            } else {
+                this.jong = '';
+            }
         } else if (this.jung) {
-            this.jung = '';
+            // 복합 모음 분해
+            const jungCombinations = {
+                'ㅘ': 'ㅗ', 'ㅙ': 'ㅗ', 'ㅚ': 'ㅗ',
+                'ㅝ': 'ㅜ', 'ㅞ': 'ㅜ', 'ㅟ': 'ㅜ',
+                'ㅢ': 'ㅡ'
+            };
+            
+            if (jungCombinations[this.jung]) {
+                this.jung = jungCombinations[this.jung];
+            } else {
+                this.jung = '';
+            }
         } else if (this.cho) {
             this.cho = '';
         }

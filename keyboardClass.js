@@ -59,6 +59,7 @@ export default class KeyboardClass {
         this.output = new Feld();
         this.target = new Feld();
         this.target.buffer = 'hello world';
+        this.processAppendEvent = ()=>{};
     }
 
 
@@ -67,22 +68,27 @@ export default class KeyboardClass {
         this.input.buffer = '';
     }
 
+    Backspace() {
+        this.input.buffer = this.input.buffer.slice(0, -1);
+        this.hangulClass.reset();
+    }
 
     processKey(key) {
         this.input.buffer += key;
+        
+        this.processAppendEvent();
 
         if( this.lang === 'ko' ) {
             key = this.hangulClass.processKey(key);
-
-            if(key === this.target.buffer[this.order]) {
+            //console.log(key, this.target.buffer[this.target.order]);
+            if(key === this.target.buffer[this.target.order]) {
                 this.hangulClass.reset();
-                //this.output.buffer += key;
-                //this.order++;
+                this.output.buffer += key;
+                this.output.order++;
+                this.target.order++;
                 
                 return key;
             }
-
-            this.output.buffer += key;
         }
         if( this.lang === 'en' ) {
 
@@ -93,7 +99,6 @@ export default class KeyboardClass {
             }
             return key;
         }
-
         
     }
 

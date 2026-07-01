@@ -56,6 +56,10 @@ const init = args => {
     let timeCount = 0;
     
     frameEmitter.push('speed', (timestamp) => {
+        if(lastTimestamp === 0) {
+            lastTimestamp = timestamp;
+            return;
+        }
         frameCount++;
         if (frameCount >= 10) {
             frameCount = 0;
@@ -71,15 +75,15 @@ const init = args => {
             if(!frameEmitter.binded) {
                 frameEmitter.bind();
             }
+            lastTimestamp = 0;
+            typingCount = 0;
             timeCount = 0;
             return;
         }
-        console.log('processAppendEvent');
+        //console.log('processAppendEvent');
         typingCount++;
-        if(keyboard.target.buffer.length === keyboard.output.buffer.length) {
+        if(keyboard.target.buffer.length - 1 === keyboard.output.buffer.length) {
             firstClick = true;
-            typingCount = 0;
-            timeCount = 0;
             frameEmitter.unbind('speed');
         }
     };

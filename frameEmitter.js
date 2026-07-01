@@ -20,11 +20,11 @@ export default class FrameEmitter {
     }
 
     bind() {
-        const action = () => {
+        const action = (timestamp) => {
             if(!this.binded) return;
             this.eventEmitter.map.forEach((value) => {
                 value.forEach(event => {
-                    event();
+                    event(timestamp);
                 });
             });
             requestAnimationFrame(action);

@@ -52,21 +52,26 @@ const init = args => {
     const frameEmitter = new FrameEmitter();
     let frameCount = 0;
     let typingCount = 0;
-    let tigCount = 0;
+    let lastTimestamp = 0;
+    let timeCount = 0;
     
-    frameEmitter.push('speed', () => {
+    frameEmitter.push('speed', (timestamp) => {
         frameCount++;
         if (frameCount >= 10) {
             frameCount = 0;
-            tigCount++;
-            nodes.status.children[0].textContent = 'typing speed: ' + (typingCount / tigCount * 60 * 6).toFixed(2) + ' wpm';
+            timeCount += timestamp - lastTimestamp;
+            nodes.status.children[0].textContent = 'typing speed: ' + (typingCount / timeCount * 60 * 1000).toFixed(2) + ' wpm';
             //console.log('typing speed:', typingCount / tigCount * 60);
+            lastTimestamp = timestamp;
         }
     });
     keyboard.processAppendEvent = () => {
         if (firstClick) {
             firstClick = false;
-            tigCount = 0;
+            if(!frameEmitter.binded) {
+                frameEmitter.bind();
+            }
+            timeCount = 0;
             return;
         }
         console.log('processAppendEvent');
@@ -74,7 +79,7 @@ const init = args => {
         if(keyboard.target.buffer.length === keyboard.output.buffer.length) {
             firstClick = true;
             typingCount = 0;
-            tigCount = 0;
+            timeCount = 0;
             frameEmitter.unbind('speed');
         }
     };
